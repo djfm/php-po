@@ -46,7 +46,7 @@ class PoFileCore
 
 	public static function escape($string)
 	{
-		return '"' . preg_replace('/\\\*"/', '\"', $string) . '"';
+		return '"'.preg_replace('/\\\*\'/', '\'', preg_replace('/\\\*"/', '\"', $string)).'"';
 	}
 
 	public static function unbreaklines($string)
@@ -70,6 +70,33 @@ class PoFileCore
 		}
 
 		$this->entries[$msgid] = array('msgid' => $msgid, 'msgctxt' => $context, 'msgstr' => $translation);
+	}
+
+	public function add($msgid, $msgid_plural='', $msgctxt='', $msgstr='')
+	{
+		if ($msgid === '')
+			return;
+		$cmsgstr = ($msgctxt !== '') ? $msgctxt."\x04" .$msgid : $msgid;
+		
+		$entry = array(
+			'msgid' => $msgid,
+			'msgstr' => $msgstr
+		);
+
+		if ($msgctxt !== '')
+			$entry['msgctxt'] = $msgctxt;
+
+		if ($msgid_plural !== '')
+			$entry['msgid_plural'] = $msgid_plural;
+
+		if ($msgctxt !== '')
+			$entry['msgctxt'] = $msgctxt;
+
+		if (is_array($msgstr))
+			foreach ($msgstr as $plurality => $str)
+				$entry["msgstr[$plurality]"] = $str;
+
+		$this->entries[$cmsgstr] = $entry;
 	}
 
 	public function addMessages($messages)
