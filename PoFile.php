@@ -209,7 +209,6 @@ class PoFileCore
 					}
 					else
 					{
-						//die("<pre>".print_r(end($hash),1)."</pre>");
 						throw new Exception("Entry does not have a msgid! (at line: $line_number)");
 					}
 				}
@@ -281,8 +280,21 @@ class PoFileCore
 		$ids = '';
 		$strings = '';
 
-		foreach ($hash as $entry)
+		foreach ($hash as $cmsgid => $entry)
 		{
+			/*
+			$empty = true;
+			foreach($entry as $k => $v)
+			{
+				if (preg_match('/^msgstr/', $k) && $v != '')
+				{
+					$empty = false;
+					break;
+				}
+			}
+			if ($empty)
+				continue;*/
+
 			$id = $entry['msgid'];
 			if(isset ($entry['msgid_plural']))
 				$id .= "\x00" . $entry['msgid_plural'];
@@ -375,17 +387,13 @@ class PoFileCore
 		foreach($entry as $key => $value)
 		{
 			// Comments are already taken care of at this point
-			if($key == 'comments')continue;
-			// Only write empty values if they are msgstr's
-			if($value == '' && !preg_match('/^msgstr/', $key))continue;
-			if($key == 'msgctxt')
-			{
-				$string .= "\n$key $value";
-			}
-			else
-			{
-				$string .= "\n$key " . static::format($value);
-			}
+			if ($key == 'comments')
+				continue;
+			// Only write empty values if they are msgstr's or msgid's
+			if ($value == '' && !preg_match('/^msgstr/', $key) && !preg_match('/^msgid/', $key))
+				continue;
+			
+			$string .= "\n$key " . static::format($value);
 		}
 
 		return $string;
@@ -438,7 +446,7 @@ class PoFileCore
 		file_put_contents($path, (string)$this);
 	}
 
-	public function getEntries()
+	public function &getEntries()
 	{
 		return $this->entries;
 	}
